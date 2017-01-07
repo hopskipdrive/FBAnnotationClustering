@@ -9,6 +9,8 @@
 #import "FBClusteringManager.h"
 #import "FBQuadTree.h"
 
+
+
 static NSString * const kFBClusteringManagerLockName = @"co.infinum.clusteringLock";
 
 #pragma mark - Utility functions
@@ -107,7 +109,7 @@ CGFloat FBCellSizeForZoomScale(MKZoomScale zoomScale)
     return [self clusteredAnnotationsWithinMapRect:rect withZoomScale:zoomScale withFilter:nil];
 }
 
-- (NSArray *)clusteredAnnotationsWithinMapRect:(MKMapRect)rect withZoomScale:(double)zoomScale withFilter:(BOOL (^)(id<MKAnnotation>)) filter
+- (NSArray *)clusteredAnnotationsWithinMapRect:(MKMapRect)rect withZoomScale:(double)zoomScale withFilter:(FilterResult (^)(id<MKAnnotation>)) filter
 {
     double cellSize = FBCellSizeForZoomScale(zoomScale);
     if ([self.delegate respondsToSelector:@selector(cellSizeFactorForCoordinator:)]) {
@@ -132,14 +134,18 @@ CGFloat FBCellSizeForZoomScale(MKZoomScale zoomScale)
             __block double totalLongitude = 0;
             
             NSMutableArray *annotations = [[NSMutableArray alloc] init];
-
+            
             [self.tree enumerateAnnotationsInBox:mapBox usingBlock:^(id<MKAnnotation> obj) {
                 
-                if(!filter || (filter(obj) == TRUE))
-                {
+                FilterResult filterResult = filter == nil ? FilterResultIncludedWithinCluster : filter(obj);
+       
+                if(filterResult == FilterResultIncludedWithinCluster) {
                     totalLatitude += [obj coordinate].latitude;
                     totalLongitude += [obj coordinate].longitude;
                     [annotations addObject:obj];
+                }
+                else if (filterResult == FilterResultIncludedIndividually) {
+                    [clusteredAnnotations addObject:obj];
                 }
             }];
             

@@ -10,6 +10,12 @@
 #import "FBQuadTreeNode.h"
 #import "FBAnnotationCluster.h"
 
+typedef NS_ENUM(NSUInteger, FilterResult) {
+    FilterResultNotIncluded,
+    FilterResultIncludedWithinCluster,
+    FilterResultIncludedIndividually
+};
+
 @class FBClusteringManager;
 
 @protocol FBClusteringManagerDelegate <NSObject>
@@ -79,7 +85,7 @@
 
 - (NSArray *)clusteredAnnotationsWithinMapRect:(MKMapRect)rect
                                  withZoomScale:(double)zoomScale
-                                 withFilter:(BOOL (^)(id<MKAnnotation>)) filter;
+                                 withFilter:(FilterResult (^)(id<MKAnnotation>)) filter;
 
 /**
  All annotations in quad tree.
